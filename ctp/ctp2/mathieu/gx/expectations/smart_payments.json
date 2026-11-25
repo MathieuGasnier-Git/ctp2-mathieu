@@ -1,0 +1,109 @@
+{
+  "expectations": [
+    {
+      "id": "26ead77b-c9be-4d1e-8452-bc04d5f1ece4",
+      "kwargs": {
+        "column": "payment_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "66d5244b-ae22-48cc-aea6-ecbbd7a4142b",
+      "kwargs": {
+        "column": "payment_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "536ceb57-4e21-4b6a-9029-e81673ef1be1",
+      "kwargs": {
+        "column": "amount"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "9e6c3505-b89e-4b47-90b3-52755cfdd255",
+      "kwargs": {
+        "column": "currency",
+        "value_set": [
+          "EUR"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "d0ea0431-3a69-4dd7-9277-e89e869af75b",
+      "kwargs": {
+        "column": "method",
+        "value_set": [
+          "card",
+          "paypal",
+          "apple_pay",
+          "bank_transfer"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "46cc4de7-0a76-4f07-bf29-2b7b708cad72",
+      "kwargs": {
+        "column": "amount",
+        "max_value": 5000.0,
+        "min_value": 0.0,
+        "strict_min": true
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "ba9a41a1-30b5-40a2-80d1-efd864bfcab7",
+      "kwargs": {
+        "column": "amount",
+        "max_value": 500.0,
+        "min_value": 50.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_median_to_be_between"
+    },
+    {
+      "id": "9e2598bd-aed3-49ed-a47c-6b2515d30953",
+      "kwargs": {
+        "column": "amount",
+        "max_value": 500.0,
+        "min_value": 50.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_mean_to_be_between"
+    },
+    {
+      "id": "981f641d-c947-4f96-a95c-4f9ebf7e7062",
+      "kwargs": {
+        "column": "amount_txt",
+        "mostly": 0.9,
+        "regex": "^\\d+\\.\\d{1,2}$"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_match_regex"
+    }
+  ],
+  "id": "f662c97a-2168-48c6-a117-d4ebd80a009b",
+  "meta": {
+    "great_expectations_version": "1.25.0"
+  },
+  "name": "smart_payments",
+  "notes": null
+}
