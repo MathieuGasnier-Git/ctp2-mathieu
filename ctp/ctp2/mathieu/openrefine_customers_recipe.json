@@ -1,0 +1,199 @@
+[
+  {
+    "op": "core/row-reorder",
+    "mode": "row-based",
+    "sorting": {
+      "criteria": [
+        {
+          "valueType": "string",
+          "column": "customer_id",
+          "blankPosition": 2,
+          "errorPosition": 1,
+          "reverse": false,
+          "caseSensitive": false
+        }
+      ]
+    },
+    "description": "1a. Sort by customer_id and reorder rows permanently"
+  },
+  {
+    "op": "core/blank-down",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "customer_id",
+    "description": "1b. Blank down cells in column customer_id"
+  },
+  {
+    "op": "core/row-removal",
+    "engineConfig": {
+      "facets": [
+        {
+          "type": "list",
+          "name": "customer_id",
+          "expression": "isBlank(value)",
+          "columnName": "customer_id",
+          "invert": false,
+          "omitBlank": false,
+          "omitError": false,
+          "selection": [
+            {
+              "v": {
+                "v": true,
+                "l": "true"
+              }
+            }
+          ],
+          "selectBlank": false,
+          "selectError": false
+        }
+      ],
+      "mode": "row-based"
+    },
+    "description": "1c. Facet blank customer_id and remove the exact duplicate rows"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "first_name",
+    "expression": "grel:value.trim().replace(/\\s+/, ' ').toTitlecase()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "2a. first_name: trim, collapse spaces, titlecase"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "last_name",
+    "expression": "grel:value.trim().replace(/\\s+/, ' ').toTitlecase()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "2b. last_name: trim, collapse spaces, titlecase"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "address",
+    "expression": "grel:value.trim()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "2c. address: trim trailing spaces"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "email",
+    "expression": "grel:value.trim().toLowercase()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "3. email: trim + lower case"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "country",
+    "expression": "grel:with(value.trim().toLowercase(), v, if(or(v == 'fr', v == 'fra', v == 'france'), 'FR', if(or(v == 'de', v == 'deu', v == 'germany', v == 'allemagne'), 'DE', if(or(v == 'es', v == 'esp', v == 'spain', v == 'espagne'), 'ES', if(or(v == 'be', v == 'bel', v == 'belgium', v == 'belgique'), 'BE', value)))))",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "4. country: 18 spellings -> FR, DE, ES, BE (empty cells stay empty)"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "signup_date",
+    "expression": "grel:if(isNotNull(value.match(/\\d{2}\\/\\d{2}\\/\\d{4}/)), with(value.split('/'), p, p[2]+'-'+p[1]+'-'+p[0]), if(isNotNull(value.match(/\\d{2}-\\d{2}-\\d{4}/)), with(value.split('-'), p, p[2]+'-'+p[0]+'-'+p[1]), if(isNotNull(value.match(/\\d{4}\\/\\d{2}\\/\\d{2}/)), value.replace('/', '-'), value)))",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "5a. signup_date: dd/mm/yyyy, mm-dd-yyyy, yyyy/mm/dd -> YYYY-MM-DD"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "birth_date",
+    "expression": "grel:if(isNotNull(value.match(/\\d{2}\\/\\d{2}\\/\\d{4}/)), with(value.split('/'), p, p[2]+'-'+p[1]+'-'+p[0]), if(isNotNull(value.match(/\\d{2}-\\d{2}-\\d{4}/)), with(value.split('-'), p, p[2]+'-'+p[0]+'-'+p[1]), if(isNotNull(value.match(/\\d{4}\\/\\d{2}\\/\\d{2}/)), value.replace('/', '-'), value)))",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "5b. birth_date: dd/mm/yyyy, mm-dd-yyyy, yyyy/mm/dd -> YYYY-MM-DD"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "loyalty_tier",
+    "expression": "grel:with(value.trim().toLowercase(), v, if(v == 'platinium', 'platinum', v))",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "6. loyalty_tier: lower case, platinium -> platinum"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "postal_code",
+    "expression": "grel:if(and(cells['country'].value == 'FR', value.length() == 4), '0' + value, value)",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "7. French postal codes with 4 digits: add the missing leading 0"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "phone",
+    "expression": "grel:with(value.replace(/[^0-9+]/, ''), v, if(v.startsWith('0033'), '+33' + v.substring(4), if(and(v.startsWith('0'), v.length() == 10), '+33' + v.substring(1), v)))",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "8. phone: +33612345678 format"
+  },
+  {
+    "op": "core/column-addition",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "baseColumnName": "email",
+    "expression": "grel:if(isBlank(value), false, facetCount(value, 'value', 'email') > 1)",
+    "onError": "set-to-blank",
+    "newColumnName": "is_duplicate_email",
+    "columnInsertIndex": 4,
+    "description": "9. Flag duplicate emails in a new column is_duplicate_email (flag, do not delete)"
+  }
+]
