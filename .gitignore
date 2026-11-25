@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+gx/uncommitted/
+shopfast-kit/
+*.pdf
