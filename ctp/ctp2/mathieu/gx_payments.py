@@ -58,6 +58,7 @@ def run(name, expectations, df):
 
 results = {}
 for label, path in files.items():
+    print(f"{label}: {path.resolve()}")
     df = pd.read_csv(path, dtype=str)
     df["amount_txt"] = df["amount"]
     df["amount"] = pd.to_numeric(df["amount"])
