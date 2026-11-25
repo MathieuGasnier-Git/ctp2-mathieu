@@ -9,7 +9,6 @@ Rendu du CTP 2 de Data Governance (Mathieu Gasnier), tout est dans `ctp/ctp2/mat
 - `gx_orders.py` : 12 expectations sur orders.csv (exercice 3)
 - `data_docs.png`, `data_docs_failed.png` : captures des Data Docs
 - `gx_payments.py` et `payments_batch_2.csv` : incident des centimes (exercice 4)
-- `reponse.md` : la garde de gouvernance qui manquait
 
 ## Lancer
 
