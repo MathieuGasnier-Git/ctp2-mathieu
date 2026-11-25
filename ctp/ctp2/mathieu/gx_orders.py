@@ -1,39 +1,20 @@
-"""CTP 2 - Exercice 3 : suite d'expectations pour les commandes ShopFast (GX Core 1.x), 12 expectations.
-Lancement :  python gx_orders.py
-Data Docs :  gx/uncommitted/data_docs/local_site/index.html
-"""
+# CTP 2 - Exercice 3 : suite d'expectations sur les commandes (GX 1.x)
+# lancer depuis ctp/ctp2/mathieu :  python gx_orders.py
 import os
-from pathlib import Path
 
 import great_expectations as gx
 import pandas as pd
 
-HERE = Path(__file__).resolve().parent
-
-
-def kit_file(name):
-    candidates = [os.environ.get("SHOPFAST_KIT", ""), HERE / "../shopfast-kit/data",
-                  HERE / "../../shopfast-kit/data", HERE / "../../../shopfast-kit/data"]
-    for d in candidates:
-        if d and (Path(d) / name).exists():
-            return Path(d) / name
-    raise FileNotFoundError(f"{name} introuvable, definir SHOPFAST_KIT=chemin/vers/shopfast-kit/data")
-
-
-orders = pd.read_csv(kit_file("orders.csv"), dtype=str)
-customers = pd.read_csv(kit_file("customers.csv"), dtype=str)
+KIT = os.environ.get("SHOPFAST_KIT", "../../../shopfast-kit/data/")
+orders = pd.read_csv(KIT + "/orders.csv", dtype=str)
+customers = pd.read_csv(KIT + "/customers.csv", dtype=str)
 orders["total_amount_eur"] = pd.to_numeric(orders["total_amount_eur"], errors="coerce")
-orders["order_date_dt"] = pd.to_datetime(orders["order_date"], format="%Y-%m-%d", errors="coerce")  # copie typee pour les plages
+orders["order_date_dt"] = pd.to_datetime(orders["order_date"], format="%Y-%m-%d", errors="coerce")
 
-# valeurs observees avant de choisir les listes autorisees
-for col in ["status", "channel", "shipping_country"]:
-    print(orders[col].map(repr).value_counts(dropna=False).to_string(), "\n")
-
-# date de reference fixe (jour de l'extraction) plutot que date.today() : sinon le resultat de la regle
-# "pas dans le futur" change selon le jour ou on relance le script, et le scorecard ne serait plus reproductible
+# date fixe (jour de l'extraction) pour que le resultat ne change pas selon le jour ou on relance
 REF_DATE = pd.Timestamp("2026-11-25")
 
-context = gx.get_context(mode="file", project_root_dir=HERE)   # cree ./gx/ (config + Data Docs) a cote du script
+context = gx.get_context(mode="file")
 source = context.data_sources.add_or_update_pandas("shopfast")
 asset = source.add_dataframe_asset(name="orders")
 batch_def = asset.add_batch_definition_whole_dataframe("all_orders")
@@ -41,31 +22,25 @@ batch_def = asset.add_batch_definition_whole_dataframe("all_orders")
 suite = context.suites.add_or_update(gx.ExpectationSuite(name="orders_suite"))
 E = gx.expectations
 for e in [
-    # volume attendu d'un export complet : moins de 1000 lignes = export tronque
     E.ExpectTableRowCountToBeBetween(min_value=1000, max_value=100000),
     E.ExpectColumnValuesToNotBeNull(column="order_id"),
-    # une commande en double = chiffre d'affaires compte deux fois
     E.ExpectColumnValuesToBeUnique(column="order_id"),
-
-    # TODO 1 : une commande sans client ne peut etre ni facturee ni livree
+    # TODO 1 : sans client on ne peut ni facturer ni livrer
     E.ExpectColumnValuesToNotBeNull(column="customer_id"),
-    # TODO 2 : cle etrangere, le client doit exister dans customers (sinon commande orpheline)
+    # TODO 2 : cle etrangere, sinon commande orpheline
     E.ExpectColumnValuesToBeInSet(column="customer_id", value_set=sorted(set(customers["customer_id"].dropna()))),
-    # TODO 3 : la date sert a rattacher le CA au bon mois, elle est obligatoire...
+    # TODO 3 : la date sert a mettre le CA dans le bon mois, donc obligatoire et en ISO
     E.ExpectColumnValuesToNotBeNull(column="order_date"),
-    # ... et au format ISO YYYY-MM-DD pour que tous les outils la lisent pareil
     E.ExpectColumnValuesToMatchRegex(column="order_date", regex=r"^\d{4}-\d{2}-\d{2}$"),
-    # TODO 4 : une commande ne peut pas avoir lieu dans le futur (bug d'horloge ou saisie)
-    # borne basse 2020 : ShopFast n'a pas de commandes plus anciennes, une date avant = erreur de saisie
+    # TODO 4 : pas de commande dans le futur, et rien avant 2020 (pas de commandes ShopFast avant)
     E.ExpectColumnValuesToBeBetween(column="order_date_dt", min_value=pd.Timestamp("2020-01-01"), max_value=REF_DATE),
-    # TODO 5 : cycle de vie d'une commande, en minuscules ; "SHIPPED" ou "canceled" casseraient les filtres des rapports
+    # TODO 5 : statuts en minuscules, "SHIPPED" ou "canceled" faussent les filtres des rapports
     E.ExpectColumnValuesToBeInSet(column="status", value_set=["pending", "shipped", "delivered", "cancelled", "returned"]),
-    # TODO 6 : les 3 canaux de vente existants (value_counts : web, mobile_app, marketplace)
+    # TODO 6 : les 3 canaux vus dans value_counts()
     E.ExpectColumnValuesToBeInSet(column="channel", value_set=["web", "mobile_app", "marketplace"]),
-    # ShopFast ne livre que FR, BE, DE, ES (codes ISO-2) : autre pays = pas de transporteur ni de TVA prevue
+    # ShopFast ne livre qu'en FR, BE, DE, ES
     E.ExpectColumnValuesToBeInSet(column="shipping_country", value_set=["FR", "BE", "DE", "ES"]),
-    # TODO 7 : montant strictement positif (un remboursement n'est pas une commande) et plafond a 5000 EUR :
-    # le max observe est ~1400 EUR, 5000 laisse de la marge mais attrape un montant x100 (centimes)
+    # TODO 7 : montant > 0 et max 5000 EUR (max vu ~1400, ca laisse de la marge mais attrape un x100)
     E.ExpectColumnValuesToBeBetween(column="total_amount_eur", min_value=0, max_value=5000, strict_min=True),
 ]:
     suite.add_expectation(e)
@@ -76,8 +51,7 @@ checkpoint = context.checkpoints.add_or_update(gx.Checkpoint(name="orders_checkp
                                                              actions=[gx.checkpoint.UpdateDataDocsAction(name="docs")]))
 result = checkpoint.run(batch_parameters={"dataframe": orders})
 
-print("\nExpectations in suite:", len(suite.expectations))
-print("Suite passed:", result.success)
+print("\nSuite passed:", result.success)
 for vr in result.run_results.values():
     for r in vr.results:
         cfg = r.expectation_config
